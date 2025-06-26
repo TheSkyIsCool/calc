@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SPTS Stat Progress Calculator</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input, select {
+      padding: 8px;
+      margin: 5px 0;
+      width: 100%;
+      max-width: 300px;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #1f1f1f;
+      border: 1px solid #333;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    #result {
+      margin-top: 20px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h2>SPTS Stat Progress Calculator</h2>
+  
+  <label for="current">Current Stat:</label><br>
+  <input type="number" id="current" /><br>
+
+  <label for="target">Target Stat:</label><br>
+  <input type="number" id="target" /><br>
+
+  <label for="multiplier">Current Multiplier Power (2ⁿ):</label><br>
+  <input type="number" id="multiplier" /><br>
+
+  <label for="tokens">Available Tokens:</label><br>
+  <input type="number" id="tokens" /><br>
+
+  <label for="areaBoost">Area Boost (e.g. 100M = 100000000):</label><br>
+  <input type="number" id="areaBoost" /><br>
+
+  <label for="type">Stat Type:</label><br>
+  <select id="type">
+    <option value="1">Fist Strength (1s)</option>
+    <option value="1.25">Body Toughness (1.25s)</option>
+    <option value="1.5">Psychic Power (1.5s)</option>
+  </select><br>
+
+  <button onclick="calculate()">Calculate</button>
+
+  <div id="result"></div>
+
+  <script>
+    const multiplierCosts = {
+      2: 100,
+      4: 200,
+      8: 500,
+      16: 1000,
+      32: 2000,
+      64: 5000,
+      128: 10000,
+      256: 15000,
+      512: 20000,
+      1024: 50000,
+      2048: 100000,
+      4096: 200000,
+      8192: 500000,
+      16384: 1000000,
+      32768: 2000000,
+      65536: 5000000,
+      131072: 10000000,
+      262144: 20000000,
+      524288: 50000000,
+      1048576: 100000000,
+      2097152: 200000000
+    };
+
+    function applyMultiplierUpgrades(currentMultiplier, tokens) {
+      let mult = currentMultiplier;
+      let upgrades = 0;
+      while (true) {
+        const next = mult * 2;
+        const cost = multiplierCosts[next];
+        if (cost !== undefined && tokens >= cost) {
+          tokens -= cost;
+          mult = next;
+          upgrades++;
+        } else {
+          break;
+        }
+      }
+      return { finalMultiplier: mult, remainingTokens: tokens, totalUpgrades: upgrades };
+    }
+
+    function calculate() {
+      const current = parseFloat(document.getElementById("current").value);
+      const target = parseFloat(document.getElementById("target").value);
+      const multiplierPower = parseInt(document.getElementById("multiplier").value);
+      const startingTokens = parseFloat(document.getElementById("tokens").value);
+      const areaBoost = parseFloat(document.getElementById("areaBoost").value);
+      const tickTime = parseFloat(document.getElementById("type").value);
+
+      if (isNaN(current) || isNaN(target) || isNaN(multiplierPower) || isNaN(areaBoost) || isNaN(startingTokens)) {
+        document.getElementById("result").innerText = "Please enter all fields correctly.";
+        return;
+      }
+
+      const initialMultiplier = Math.pow(2, multiplierPower);
+      const upgradeResult = applyMultiplierUpgrades(initialMultiplier, startingTokens);
+
+      const finalMultiplier = upgradeResult.finalMultiplier;
+      const gainPerTick = areaBoost * finalMultiplier;
+      const totalTicks = (target - current) / gainPerTick;
+      const totalSeconds = totalTicks * tickTime;
+
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = Math.floor(totalSeconds % 60);
+
+      const resultText = 
+        `🔁 Multiplier upgraded from x${initialMultiplier} to x${finalMultiplier} (${upgradeResult.totalUpgrades} upgrades)\n` +
+        `💰 Remaining Tokens: ${upgradeResult.remainingTokens.toLocaleString()}\n\n` +
+        `⏳ Estimated Time to Reach Target Stat:\n` +
+        `${hours} hours, ${minutes} minutes, ${seconds} seconds`;
+
+      document.getElementById("result").innerText = resultText;
+    }
+  </script>
+</body>
+</html>
