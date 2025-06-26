@@ -1,70 +1,113 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SPTS Stat Progress Calculator</title>
+  <meta charset="UTF-8">
+  <title>Roblox Stat Progress Calculator</title>
   <style>
     body {
       background-color: #121212;
-      color: #fff;
+      color: #e0e0e0;
       font-family: Arial, sans-serif;
       padding: 20px;
     }
+    h1 { color: #90caf9; }
+    label, select, input {
+      display: block;
+      margin: 10px 0;
+    }
     input, select {
       padding: 8px;
-      margin: 5px 0;
-      width: 100%;
-      max-width: 300px;
-      border: none;
-      border-radius: 5px;
+      background-color: #1e1e1e;
+      color: #fff;
+      border: 1px solid #333;
     }
     button {
-      padding: 10px 20px;
-      background-color: #1f1f1f;
-      border: 1px solid #333;
-      color: #fff;
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
       cursor: pointer;
-      border-radius: 5px;
-      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #1976d2;
     }
     #result {
       margin-top: 20px;
-      white-space: pre-wrap;
+      padding: 15px;
+      background-color: #1e1e1e;
+      border: 1px solid #333;
     }
   </style>
 </head>
 <body>
-  <h2>SPTS Stat Progress Calculator</h2>
-  
-  <label for="current">Current Stat:</label><br>
-  <input type="number" id="current" /><br>
+  <h1>Roblox Stat Progress Calculator</h1>
 
-  <label for="target">Target Stat:</label><br>
-  <input type="number" id="target" /><br>
+  <label>Current Tokens:</label>
+  <input type="number" id="tokens" value="0">
 
-  <label for="multiplier">Current Multiplier Power (2ⁿ):</label><br>
-  <input type="number" id="multiplier" /><br>
+  <label>Tokens Per Minute (TPM):</label>
+  <input type="number" id="tpm" value="10">
 
-  <label for="tokens">Available Tokens:</label><br>
-  <input type="number" id="tokens" /><br>
+  <label>Minutes until next +1 TPM:</label>
+  <input type="number" id="tpmNext" value="120">
 
-  <label for="areaBoost">Area Boost (e.g. 100M = 100000000):</label><br>
-  <input type="number" id="areaBoost" /><br>
+  <label>Current Multiplier:</label>
+  <select id="currentMultiplier"></select>
 
-  <label for="type">Stat Type:</label><br>
-  <select id="type">
-    <option value="1">Fist Strength (1s)</option>
-    <option value="1.25">Body Toughness (1.25s)</option>
-    <option value="1.5">Psychic Power (1.5s)</option>
-  </select><br>
+  <label>Current Stat Gain per Tick:</label>
+  <input type="text" id="baseGain" value="3200">
 
-  <button onclick="calculate()">Calculate</button>
+  <label>Stat Type:</label>
+  <select id="statType">
+    <option value="1">Fist Strength (1s/tick)</option>
+    <option value="1.25">Body Toughness (1.25s/tick)</option>
+    <option value="1.5">Psychic Power (1.5s/tick)</option>
+  </select>
+
+  <label>Current Stat Value:</label>
+  <input type="text" id="currentStat" value="0">
+
+  <label>Target Stat Value:</label>
+  <input type="text" id="targetStat" value="100B">
+
+  <button onclick="calculate()">Calculate Time to Goal</button>
 
   <div id="result"></div>
 
   <script>
+    // Fill multiplier dropdown up to 2,097,152
+    const multiplierSelect = document.getElementById("currentMultiplier");
+    for (let i = 0; i <= 21; i++) {
+      let val = Math.pow(2, i);
+      let option = document.createElement("option");
+      option.value = val;
+      option.text = `x${val}`;
+      multiplierSelect.appendChild(option);
+    }
+
+    function parseShorthand(value) {
+      value = value.toUpperCase().replace(/,/g, '').trim();
+      const suffixes = {
+        K: 1e3,
+        M: 1e6,
+        B: 1e9,
+        T: 1e12,
+        QA: 1e15,
+        QI: 1e18,
+        SX: 1e21,
+        SP: 1e24
+      };
+
+      const match = value.match(/^([\d.]+)([A-Z]{1,2})?$/);
+      if (!match) return parseFloat(value);
+      const num = parseFloat(match[1]);
+      const suffix = match[2] || '';
+      return num * (suffixes[suffix] || 1);
+    }
+
     const multiplierCosts = {
+      1: 0,
       2: 100,
       4: 200,
       8: 500,
@@ -88,55 +131,81 @@
       2097152: 200000000
     };
 
-    function applyMultiplierUpgrades(currentMultiplier, tokens) {
-      let mult = currentMultiplier;
-      let upgrades = 0;
-      while (true) {
-        const next = mult * 2;
-        const cost = multiplierCosts[next];
-        if (cost !== undefined && tokens >= cost) {
-          tokens -= cost;
-          mult = next;
-          upgrades++;
-        } else {
-          break;
-        }
+    function getNextMultiplier(mult) {
+      return mult * 2;
+    }
+
+    function getNextCost(mult) {
+      const nextMult = getNextMultiplier(mult);
+      if (multiplierCosts[nextMult]) {
+        return multiplierCosts[nextMult];
+      } else {
+        // Fall back: double the previous if not in map
+        return (multiplierCosts[mult] || 100000000) * 2;
       }
-      return { finalMultiplier: mult, remainingTokens: tokens, totalUpgrades: upgrades };
     }
 
     function calculate() {
-      const current = parseFloat(document.getElementById("current").value);
-      const target = parseFloat(document.getElementById("target").value);
-      const multiplierPower = parseInt(document.getElementById("multiplier").value);
-      const startingTokens = parseFloat(document.getElementById("tokens").value);
-      const areaBoost = parseFloat(document.getElementById("areaBoost").value);
-      const tickTime = parseFloat(document.getElementById("type").value);
+      let tokens = parseFloat(document.getElementById('tokens').value);
+      let tpm = parseFloat(document.getElementById('tpm').value);
+      let minutesToNextTPM = parseFloat(document.getElementById('tpmNext').value);
+      let currentMultiplier = parseInt(document.getElementById('currentMultiplier').value);
+      const originalMultiplier = currentMultiplier;
+      let statTickRate = parseFloat(document.getElementById('statType').value);
+      let baseGain = parseShorthand(document.getElementById('baseGain').value);
+      let currentStat = parseShorthand(document.getElementById('currentStat').value);
+      let targetStat = parseShorthand(document.getElementById('targetStat').value);
 
-      if (isNaN(current) || isNaN(target) || isNaN(multiplierPower) || isNaN(areaBoost) || isNaN(startingTokens)) {
-        document.getElementById("result").innerText = "Please enter all fields correctly.";
-        return;
+      let tickTime = statTickRate;
+      let timeElapsed = 0;
+      let ticksPerMinute = 60 / tickTime;
+      let firstMultiTime = null;
+      let totalMultiplierUpgrades = 0;
+
+      while (currentStat < targetStat) {
+        let effectiveGain = baseGain * (currentMultiplier / originalMultiplier);
+        let statGainThisMinute = effectiveGain * ticksPerMinute;
+        currentStat += statGainThisMinute;
+
+        tokens += tpm;
+
+        minutesToNextTPM--;
+        if (minutesToNextTPM <= 0) {
+          tpm += 1;
+          minutesToNextTPM = 120;
+        }
+
+        let nextCost = getNextCost(currentMultiplier);
+        while (tokens >= nextCost) {
+          tokens -= nextCost;
+          currentMultiplier *= 2;
+          totalMultiplierUpgrades++;
+          nextCost = getNextCost(currentMultiplier);
+
+          if (firstMultiTime === null && currentMultiplier !== originalMultiplier) {
+            firstMultiTime = timeElapsed + 1;
+          }
+
+          if (currentMultiplier > 2097152) break; // hard stop at 2 million
+        }
+
+        timeElapsed++;
       }
 
-      const initialMultiplier = Math.pow(2, multiplierPower);
-      const upgradeResult = applyMultiplierUpgrades(initialMultiplier, startingTokens);
+      let hours = Math.floor(timeElapsed / 60);
+      let minutes = timeElapsed % 60;
+      let firstMultiString = firstMultiTime !== null
+        ? `${Math.floor(firstMultiTime / 60)}h ${firstMultiTime % 60}m`
+        : "No upgrade occurred";
 
-      const finalMultiplier = upgradeResult.finalMultiplier;
-      const gainPerTick = areaBoost * finalMultiplier;
-      const totalTicks = (target - current) / gainPerTick;
-      const totalSeconds = totalTicks * tickTime;
-
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = Math.floor(totalSeconds % 60);
-
-      const resultText = 
-        `🔁 Multiplier upgraded from x${initialMultiplier} to x${finalMultiplier} (${upgradeResult.totalUpgrades} upgrades)\n` +
-        `💰 Remaining Tokens: ${upgradeResult.remainingTokens.toLocaleString()}\n\n` +
-        `⏳ Estimated Time to Reach Target Stat:\n` +
-        `${hours} hours, ${minutes} minutes, ${seconds} seconds`;
-
-      document.getElementById("result").innerText = resultText;
+      document.getElementById("result").innerHTML = `
+        <strong>Total Time until Goal:</strong> ${hours} hours and ${minutes} minutes<br>
+        <strong>First Multiplier Upgrade:</strong> ${firstMultiString}<br>
+        <strong>Final Multiplier:</strong> x${currentMultiplier}<br>
+        <strong>Total Multiplier Upgrades:</strong> ${totalMultiplierUpgrades}<br>
+        <strong>Final TPM:</strong> ${tpm.toFixed(2)}<br>
+        <strong>Remaining Tokens:</strong> ${Math.floor(tokens)}
+      `;
     }
   </script>
 </body>
