@@ -60,6 +60,10 @@
   </select>
 </label>
 
+<label>Current Tick Gain:<br>
+  <input type="number" id="tickGain" value="1" placeholder="Stat per tick without multiplier">
+</label>
+
   </div>  <div class="quest-section">
     <h3>Daily Quests (+20 tokens each)</h3>
     <label><input type="checkbox" class="dailyQuest"> Fist Strength</label>
@@ -110,6 +114,7 @@
       let requiredStat = parseFloat(document.getElementById("requiredStat").value);
       let tokens = parseFloat(document.getElementById("tokens").value);
       let multiplier = parseInt(document.getElementById("multiplier").value);
+      let tickGain = parseFloat(document.getElementById("tickGain").value);
 
       let dailyBonus = document.querySelectorAll(".dailyQuest:checked").length * 20;
       let weeklyCheckboxes = document.querySelectorAll(`.weeklyQuest[data-tokens]`);
@@ -119,7 +124,7 @@
       let time = 0;
 
       while(currentStat < requiredStat){
-        currentStat += 1 * multiplier;
+        currentStat += tickGain * multiplier;
         time += tickSpeed;
 
         if(time % 60 === 0){ tokens += 5; }
