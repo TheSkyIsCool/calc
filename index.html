@@ -60,8 +60,8 @@
   </select>
 </label>
 
-<label>Current Tick Gain:<br>
-  <input type="number" id="tickGain" value="1" placeholder="Stat per tick without multiplier">
+<label>Current Tick Gain (including multiplier):<br>
+  <input type="number" id="tickGain" value="1" placeholder="Gain per tick including multiplier">
 </label>
 
   </div>  <div class="quest-section">
@@ -124,7 +124,7 @@
       let time = 0;
 
       while(currentStat < requiredStat){
-        currentStat += tickGain * multiplier;
+        currentStat += tickGain;
         time += tickSpeed;
 
         if(time % 60 === 0){ tokens += 5; }
