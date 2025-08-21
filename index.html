@@ -1,28 +1,66 @@
 <!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SPTS Classic Calc</title>
+  <title>SPTS Stat Time Calculator</title>
   <style>
     body { background: #111; color: #eee; font-family: Arial, sans-serif; padding: 20px; }
     h1 { color: #0ff; }
-    label { display: block; margin-top: 10px; }
-    input, select { margin-top: 5px; padding: 5px; border-radius: 5px; border: none; }
-    .quest-section { margin-top: 15px; padding: 10px; border: 1px solid #444; border-radius: 8px; }
-    button { margin-top: 20px; padding: 10px 15px; background: #0ff; color: #111; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
+    label { display: flex; flex-direction: column; margin-top: 10px; }
+    input, select { margin-top: 5px; padding: 8px; border-radius: 8px; border: none; width: 250px; transition: all 0.2s ease; }
+    input:focus, select:focus { outline: 2px solid #0ff; }
+    .quest-section { margin-top: 15px; padding: 10px; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; }
+    .form-row { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 10px; }
+    button { margin-top: 20px; padding: 12px 20px; background: #0ff; color: #111; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; }
     button:hover { background: #0cc; }
-    #result { margin-top: 20px; font-size: 18px; color: #0f0; }
+    #result { margin-top: 20px; font-size: 18px; color: #ff69b4; white-space: pre-line; }
   </style>
 </head>
 <body>
-  <h1>SPTS Stat Calculator</h1><label>Current Stat Amount: <input type="number" id="currentStat" value="0"> </label>
+  <h1>SPTS Stat Calculator</h1>  <div class="form-row">
+    <label>Power Type:<br>
+      <select id="powerType">
+        <option value="fist">Fist Strength (1s/tick)</option>
+        <option value="body">Body Toughness (1.25s/tick)</option>
+        <option value="psychic">Psychic Power (1.5s/tick)</option>
+      </select>
+    </label><label>Current Stat Amount:<br>
+  <input type="number" id="currentStat" value="0">
+</label>
 
-<label>Required Stat Amount: <input type="number" id="requiredStat" value="1000000"> </label>
+<label>Required Stat Amount:<br>
+  <input type="number" id="requiredStat" value="1000000">
+</label>
 
-<label>Current Tokens: <input type="number" id="tokens" value="0"> </label>
+<label>Current Tokens:<br>
+  <input type="number" id="tokens" value="0">
+</label>
 
-<label>Current Multiplier: <select id="multiplier"> <option value="1">1x</option> <option value="2">2x</option> <option value="4">4x</option> <option value="8">8x</option> <option value="16">16x</option> <option value="32">32x</option> <option value="64">64x</option> <option value="128">128x</option> <option value="256">256x</option> <option value="512">512x</option> <option value="1024">1024x</option> <option value="2048">2048x</option> <option value="4096">4096x</option> <option value="8192">8192x</option> <option value="16384">16384x</option> <option value="32768">32768x</option> <option value="65536">65536x</option> <option value="131072">131072x</option> <option value="262144">262144x</option> <option value="524288">524288x</option> </select> </label>
+<label>Current Multiplier:<br>
+  <select id="multiplier">
+    <option value="1">1x</option>
+    <option value="2">2x</option>
+    <option value="4">4x</option>
+    <option value="8">8x</option>
+    <option value="16">16x</option>
+    <option value="32">32x</option>
+    <option value="64">64x</option>
+    <option value="128">128x</option>
+    <option value="256">256x</option>
+    <option value="512">512x</option>
+    <option value="1024">1024x</option>
+    <option value="2048">2048x</option>
+    <option value="4096">4096x</option>
+    <option value="8192">8192x</option>
+    <option value="16384">16384x</option>
+    <option value="32768">32768x</option>
+    <option value="65536">65536x</option>
+    <option value="131072">131072x</option>
+    <option value="262144">262144x</option>
+    <option value="524288">524288x</option>
+  </select>
+</label>
 
-  <div class="quest-section">
+  </div>  <div class="quest-section">
     <h3>Daily Quests (+20 tokens each)</h3>
     <label><input type="checkbox" class="dailyQuest"> Fist Strength</label>
     <label><input type="checkbox" class="dailyQuest"> Body Toughness</label>
@@ -30,10 +68,17 @@
     <label><input type="checkbox" class="dailyQuest"> Movement Speed</label>
     <label><input type="checkbox" class="dailyQuest"> Jump Force</label>
   </div>  <div class="quest-section">
-    <h3>Weekly Quests (+100/500/2500 tokens each set)</h3>
-    <label><input type="checkbox" class="weeklyQuest"> Fist Strength</label>
-    <label><input type="checkbox" class="weeklyQuest"> Body Toughness</label>
-    <label><input type="checkbox" class="weeklyQuest"> Psychic Power</label>
+    <h3>Weekly Quests (+100, 500, 2500 tokens per stat)</h3>
+    <label><input type="checkbox" class="weeklyQuest" data-tokens="100"> Fist Strength (+100)</label>
+    <label><input type="checkbox" class="weeklyQuest" data-tokens="500"> Fist Strength (+500)</label>
+    <label><input type="checkbox" class="weeklyQuest" data-tokens="2500"> Fist Strength (+2500)</label><label><input type="checkbox" class="weeklyQuest" data-tokens="100"> Body Toughness (+100)</label>
+<label><input type="checkbox" class="weeklyQuest" data-tokens="500"> Body Toughness (+500)</label>
+<label><input type="checkbox" class="weeklyQuest" data-tokens="2500"> Body Toughness (+2500)</label>
+
+<label><input type="checkbox" class="weeklyQuest" data-tokens="100"> Psychic Power (+100)</label>
+<label><input type="checkbox" class="weeklyQuest" data-tokens="500"> Psychic Power (+500)</label>
+<label><input type="checkbox" class="weeklyQuest" data-tokens="2500"> Psychic Power (+2500)</label>
+
   </div><button onclick="calculateTime()">Calculate</button>
 
   <div id="result"></div>  <script>
@@ -44,54 +89,62 @@
       262144:20000000,524288:50000000
     };
 
+    const tickSpeeds = { fist: 1, body: 1.25, psychic: 1.5 };
+
+    function formatNumber(num){
+      if(num>=1e21) return (num/1e21).toFixed(2) + 'Sx';
+      if(num>=1e18) return (num/1e18).toFixed(2) + 'Qi';
+      if(num>=1e15) return (num/1e15).toFixed(2) + 'Qa';
+      if(num>=1e12) return (num/1e12).toFixed(2) + 'T';
+      if(num>=1e9) return (num/1e9).toFixed(2) + 'B';
+      if(num>=1e6) return (num/1e6).toFixed(2) + 'M';
+      if(num>=1e3) return (num/1e3).toFixed(2) + 'K';
+      return num;
+    }
+
     function calculateTime(){
+      let powerType = document.getElementById("powerType").value;
+      let tickSpeed = tickSpeeds[powerType];
+
       let currentStat = parseFloat(document.getElementById("currentStat").value);
       let requiredStat = parseFloat(document.getElementById("requiredStat").value);
       let tokens = parseFloat(document.getElementById("tokens").value);
       let multiplier = parseInt(document.getElementById("multiplier").value);
 
-      // Quest token bonuses
       let dailyBonus = document.querySelectorAll(".dailyQuest:checked").length * 20;
-      let weeklyBonus = document.querySelectorAll(".weeklyQuest:checked").length * (100+500+2500);
+      let weeklyCheckboxes = document.querySelectorAll(`.weeklyQuest[data-tokens]`);
+      let weeklyBonus = 0;
+      weeklyCheckboxes.forEach(cb => { if(cb.checked) weeklyBonus += parseInt(cb.getAttribute('data-tokens')); });
 
-      // Base tokens per minute
-      let tokensPerMinute = 5;
-      let tokensPerDay = tokensPerMinute * 1440 + dailyBonus; // 1440 minutes/day
-      let tokensPerWeek = tokensPerDay*7 + weeklyBonus;
-
-      // Assume Fist Strength (1s per tick). Can add dropdown later for type.
-      let tickSpeed = 1; 
-
-      let time = 0; // seconds
+      let time = 0;
 
       while(currentStat < requiredStat){
-        currentStat += multiplier; // 1 stat per tick * multiplier
+        currentStat += 1 * multiplier;
         time += tickSpeed;
 
-        // tokens gained passively (convert seconds to minutes)
-        if(time % 60 === 0){
-          tokens += tokensPerMinute;
-        }
-
-        // every day add dailyBonus
+        if(time % 60 === 0){ tokens += 5; }
         if(time % 86400 === 0) tokens += dailyBonus;
-        // every week add weeklyBonus
         if(time % 604800 === 0) tokens += weeklyBonus;
 
-        // upgrade multiplier if possible
         let nextMulti = multiplier*2;
         if(multiplierCosts[nextMulti] && tokens >= multiplierCosts[nextMulti]){
           tokens -= multiplierCosts[nextMulti];
           multiplier = nextMulti;
         }
 
-        if(time > 1e8){ // safety break
-          break;
-        }
+        if(time > 1e9) break;
       }
 
-      let hours = (time/3600).toFixed(2);
-      document.getElementById("result").innerText = "Time required: " + hours + " hours";
+      let hours = time/3600;
+      let days = hours/24;
+      let months = days/30;
+      let years = days/365;
+
+      document.getElementById("result").innerText = 
+        `Time required: ${hours.toFixed(2)} hours\n` +
+        `${days.toFixed(2)} days | ${months.toFixed(2)} months | ${years.toFixed(2)} years\n` +
+        `Final Stat: ${formatNumber(currentStat)}\n` +
+        `Tokens left: ${formatNumber(tokens)}`;
     }
   </script></body>
 </html>
