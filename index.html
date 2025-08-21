@@ -1,211 +1,97 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Roblox Stat Progress Calculator</title>
+  <title>SPTS Classic Calc</title>
   <style>
-    body {
-      background-color: #121212;
-      color: #e0e0e0;
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    h1 { color: #90caf9; }
-    label, select, input {
-      display: block;
-      margin: 10px 0;
-    }
-    input, select {
-      padding: 8px;
-      background-color: #1e1e1e;
-      color: #fff;
-      border: 1px solid #333;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px;
-      background-color: #2196f3;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #1976d2;
-    }
-    #result {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #1e1e1e;
-      border: 1px solid #333;
-    }
+    body { background: #111; color: #eee; font-family: Arial, sans-serif; padding: 20px; }
+    h1 { color: #0ff; }
+    label { display: block; margin-top: 10px; }
+    input, select { margin-top: 5px; padding: 5px; border-radius: 5px; border: none; }
+    .quest-section { margin-top: 15px; padding: 10px; border: 1px solid #444; border-radius: 8px; }
+    button { margin-top: 20px; padding: 10px 15px; background: #0ff; color: #111; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
+    button:hover { background: #0cc; }
+    #result { margin-top: 20px; font-size: 18px; color: #0f0; }
   </style>
 </head>
 <body>
-  <h1>Roblox Stat Progress Calculator</h1>
+  <h1>SPTS Stat Calculator</h1><label>Current Stat Amount: <input type="number" id="currentStat" value="0"> </label>
 
-  <label>Current Tokens:</label>
-  <input type="number" id="tokens" value="0">
+<label>Required Stat Amount: <input type="number" id="requiredStat" value="1000000"> </label>
 
-  <label>Tokens Per Minute (TPM):</label>
-  <input type="number" id="tpm" value="0">
+<label>Current Tokens: <input type="number" id="tokens" value="0"> </label>
 
-  <label>Minutes until next +1 TPM:</label>
-  <input type="number" id="tpmNext" value="0">
+<label>Current Multiplier: <select id="multiplier"> <option value="1">1x</option> <option value="2">2x</option> <option value="4">4x</option> <option value="8">8x</option> <option value="16">16x</option> <option value="32">32x</option> <option value="64">64x</option> <option value="128">128x</option> <option value="256">256x</option> <option value="512">512x</option> <option value="1024">1024x</option> <option value="2048">2048x</option> <option value="4096">4096x</option> <option value="8192">8192x</option> <option value="16384">16384x</option> <option value="32768">32768x</option> <option value="65536">65536x</option> <option value="131072">131072x</option> <option value="262144">262144x</option> <option value="524288">524288x</option> </select> </label>
 
-  <label>Current Multiplier:</label>
-  <select id="currentMultiplier"></select>
+  <div class="quest-section">
+    <h3>Daily Quests (+20 tokens each)</h3>
+    <label><input type="checkbox" class="dailyQuest"> Fist Strength</label>
+    <label><input type="checkbox" class="dailyQuest"> Body Toughness</label>
+    <label><input type="checkbox" class="dailyQuest"> Psychic Power</label>
+    <label><input type="checkbox" class="dailyQuest"> Movement Speed</label>
+    <label><input type="checkbox" class="dailyQuest"> Jump Force</label>
+  </div>  <div class="quest-section">
+    <h3>Weekly Quests (+100/500/2500 tokens each set)</h3>
+    <label><input type="checkbox" class="weeklyQuest"> Fist Strength</label>
+    <label><input type="checkbox" class="weeklyQuest"> Body Toughness</label>
+    <label><input type="checkbox" class="weeklyQuest"> Psychic Power</label>
+  </div><button onclick="calculateTime()">Calculate</button>
 
-  <label>Current Stat Gain per Tick:</label>
-  <input type="text" id="baseGain" value="0">
-
-  <label>Stat Type:</label>
-  <select id="statType">
-    <option value="1">Fist Strength (1s/tick)</option>
-    <option value="1.25">Body Toughness (1.25s/tick)</option>
-    <option value="1.5">Psychic Power (1.5s/tick)</option>
-  </select>
-
-  <label>Current Stat Value:</label>
-  <input type="text" id="currentStat" value="0">
-
-  <label>Target Stat Value:</label>
-  <input type="text" id="targetStat" value="0">
-
-  <button onclick="calculate()">Calculate Time to Goal</button>
-
-  <div id="result"></div>
-
-  <script>
-    // Fill multiplier dropdown up to 2,097,152
-    const multiplierSelect = document.getElementById("currentMultiplier");
-    for (let i = 0; i <= 21; i++) {
-      let val = Math.pow(2, i);
-      let option = document.createElement("option");
-      option.value = val;
-      option.text = `x${val}`;
-      multiplierSelect.appendChild(option);
-    }
-
-    function parseShorthand(value) {
-      value = value.toUpperCase().replace(/,/g, '').trim();
-      const suffixes = {
-        K: 1e3,
-        M: 1e6,
-        B: 1e9,
-        T: 1e12,
-        QA: 1e15,
-        QI: 1e18,
-        SX: 1e21,
-        SP: 1e24
-      };
-
-      const match = value.match(/^([\d.]+)([A-Z]{1,2})?$/);
-      if (!match) return parseFloat(value);
-      const num = parseFloat(match[1]);
-      const suffix = match[2] || '';
-      return num * (suffixes[suffix] || 1);
-    }
-
+  <div id="result"></div>  <script>
     const multiplierCosts = {
-      1: 0,
-      2: 100,
-      4: 200,
-      8: 500,
-      16: 1000,
-      32: 2000,
-      64: 5000,
-      128: 10000,
-      256: 15000,
-      512: 20000,
-      1024: 50000,
-      2048: 100000,
-      4096: 200000,
-      8192: 500000,
-      16384: 1000000,
-      32768: 2000000,
-      65536: 5000000,
-      131072: 10000000,
-      262144: 20000000,
-      524288: 50000000,
-      1048576: 100000000,
-      2097152: 200000000
+      2:100,4:200,8:500,16:1000,32:2000,64:5000,128:10000,256:15000,
+      512:20000,1024:50000,2048:100000,4096:200000,8192:500000,
+      16384:1000000,32768:2000000,65536:5000000,131072:10000000,
+      262144:20000000,524288:50000000
     };
 
-    function getNextMultiplier(mult) {
-      return mult * 2;
-    }
+    function calculateTime(){
+      let currentStat = parseFloat(document.getElementById("currentStat").value);
+      let requiredStat = parseFloat(document.getElementById("requiredStat").value);
+      let tokens = parseFloat(document.getElementById("tokens").value);
+      let multiplier = parseInt(document.getElementById("multiplier").value);
 
-    function getNextCost(mult) {
-      const nextMult = getNextMultiplier(mult);
-      if (multiplierCosts[nextMult]) {
-        return multiplierCosts[nextMult];
-      } else {
-        return (multiplierCosts[mult] || 100000000) * 2;
-      }
-    }
+      // Quest token bonuses
+      let dailyBonus = document.querySelectorAll(".dailyQuest:checked").length * 20;
+      let weeklyBonus = document.querySelectorAll(".weeklyQuest:checked").length * (100+500+2500);
 
-    function calculate() {
-      let tokens = parseFloat(document.getElementById('tokens').value);
-      let tpm = parseFloat(document.getElementById('tpm').value);
-      let minutesToNextTPM = parseFloat(document.getElementById('tpmNext').value);
-      let currentMultiplier = parseInt(document.getElementById('currentMultiplier').value);
-      const originalMultiplier = currentMultiplier;
-      let statTickRate = parseFloat(document.getElementById('statType').value);
-      let baseGain = parseShorthand(document.getElementById('baseGain').value);
-      let currentStat = parseShorthand(document.getElementById('currentStat').value);
-      let targetStat = parseShorthand(document.getElementById('targetStat').value);
+      // Base tokens per minute
+      let tokensPerMinute = 5;
+      let tokensPerDay = tokensPerMinute * 1440 + dailyBonus; // 1440 minutes/day
+      let tokensPerWeek = tokensPerDay*7 + weeklyBonus;
 
-      let tickTime = statTickRate;
-      let timeElapsed = 0;
-      let ticksPerMinute = 60 / tickTime;
-      let firstMultiTime = null;
-      let totalMultiplierUpgrades = 0;
+      // Assume Fist Strength (1s per tick). Can add dropdown later for type.
+      let tickSpeed = 1; 
 
-      while (currentStat < targetStat) {
-        let effectiveGain = baseGain * (currentMultiplier / originalMultiplier);
-        let statGainThisMinute = effectiveGain * ticksPerMinute;
-        currentStat += statGainThisMinute;
+      let time = 0; // seconds
 
-        tokens += tpm;
+      while(currentStat < requiredStat){
+        currentStat += multiplier; // 1 stat per tick * multiplier
+        time += tickSpeed;
 
-        minutesToNextTPM--;
-        if (minutesToNextTPM <= 0) {
-          tpm += 1;
-          minutesToNextTPM = 120;
+        // tokens gained passively (convert seconds to minutes)
+        if(time % 60 === 0){
+          tokens += tokensPerMinute;
         }
 
-        let nextCost = getNextCost(currentMultiplier);
-        while (tokens >= nextCost) {
-          tokens -= nextCost;
-          currentMultiplier *= 2;
-          totalMultiplierUpgrades++;
-          nextCost = getNextCost(currentMultiplier);
+        // every day add dailyBonus
+        if(time % 86400 === 0) tokens += dailyBonus;
+        // every week add weeklyBonus
+        if(time % 604800 === 0) tokens += weeklyBonus;
 
-          if (firstMultiTime === null && currentMultiplier !== originalMultiplier) {
-            firstMultiTime = timeElapsed + 1;
-          }
-
-          if (currentMultiplier > 2097152) break;
+        // upgrade multiplier if possible
+        let nextMulti = multiplier*2;
+        if(multiplierCosts[nextMulti] && tokens >= multiplierCosts[nextMulti]){
+          tokens -= multiplierCosts[nextMulti];
+          multiplier = nextMulti;
         }
 
-        timeElapsed++;
+        if(time > 1e8){ // safety break
+          break;
+        }
       }
 
-      let hours = Math.floor(timeElapsed / 60);
-      let minutes = timeElapsed % 60;
-      let firstMultiString = firstMultiTime !== null
-        ? `${Math.floor(firstMultiTime / 60)}h ${firstMultiTime % 60}m`
-        : "No upgrade occurred";
-
-      document.getElementById("result").innerHTML = `
-        <strong>Total Time until Goal:</strong> ${hours} hours and ${minutes} minutes<br>
-        <strong>First Multiplier Upgrade:</strong> ${firstMultiString}<br>
-        <strong>Final Multiplier:</strong> x${currentMultiplier}<br>
-        <strong>Total Multiplier Upgrades:</strong> ${totalMultiplierUpgrades}<br>
-        <strong>Final TPM:</strong> ${tpm.toFixed(2)}<br>
-        <strong>Remaining Tokens:</strong> ${Math.floor(tokens)}
-      `;
+      let hours = (time/3600).toFixed(2);
+      document.getElementById("result").innerText = "Time required: " + hours + " hours";
     }
-  </script>
-</body>
+  </script></body>
 </html>
