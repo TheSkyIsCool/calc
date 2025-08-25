@@ -1,7 +1,8 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Calculator</title>
+  <title>SPTS Classic Calculator</title>
   <style>
     body { background: #111; color: #eee; font-family: Arial, sans-serif; padding: 20px; position: relative; }
     h1 { color: #0ff; }
@@ -88,53 +89,94 @@
   <button onclick="calculateTime()">Calculate</button>
   <div id="result"></div>
   <div class="credits"><a href="https://skyabc.me" target="_blank">made by sky!!</a></div>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
   <script>
-    const multiplierCosts = {2:100,4:200,8:500,16:1000,32:2000,64:5000,128:10000,256:15000,512:20000,1024:50000,2048:100000,4096:200000,8192:500000,16384:1000000,32768:2000000,65536:5000000,131072:10000000,262144:20000000,524288:50000000};
+    const multiplierCosts = {
+      2:100,4:200,8:500,16:1000,32:2000,64:5000,128:10000,256:15000,
+      512:20000,1024:50000,2048:100000,4096:200000,8192:500000,16384:1000000,
+      32768:2000000,65536:5000000,131072:10000000,262144:20000000,524288:50000000
+    };
     const tickSpeeds = {fist:1,body:1.25,psychic:1.5};
 
-    function parseValue(input){let str=input.trim().toUpperCase();let multiplier=1;if(str.endsWith('K')){multiplier=1e3;str=str.slice(0,-1);}else if(str.endsWith('M')){multiplier=1e6;str=str.slice(0,-1);}else if(str.endsWith('B')){multiplier=1e9;str=str.slice(0,-1);}else if(str.endsWith('T')){multiplier=1e12;str=str.slice(0,-1);}else if(str.endsWith('QA')){multiplier=1e15;str=str.slice(0,-2);}else if(str.endsWith('QI')){multiplier=1e18;str=str.slice(0,-2);}else if(str.endsWith('SX')){multiplier=1e21;str=str.slice(0,-2);}return parseFloat(str)*multiplier;}
+    function parseValue(str) {
+      str = str.trim().toUpperCase();
+      let multiplier = new Decimal(1);
+      if (str.endsWith("K")) { multiplier = new Decimal(1e3); str = str.slice(0,-1); }
+      else if (str.endsWith("M")) { multiplier = new Decimal(1e6); str = str.slice(0,-1); }
+      else if (str.endsWith("B")) { multiplier = new Decimal(1e9); str = str.slice(0,-1); }
+      else if (str.endsWith("T")) { multiplier = new Decimal(1e12); str = str.slice(0,-1); }
+      else if (str.endsWith("QA")) { multiplier = new Decimal(1e15); str = str.slice(0,-2); }
+      else if (str.endsWith("QI")) { multiplier = new Decimal(1e18); str = str.slice(0,-2); }
+      else if (str.endsWith("SX")) { multiplier = new Decimal(1e21); str = str.slice(0,-2); }
+      return new Decimal(str).times(multiplier);
+    }
 
-    function formatNumber(num){if(num>=1e21)return(num/1e21).toFixed(2)+'Sx';if(num>=1e18)return(num/1e18).toFixed(2)+'Qi';if(num>=1e15)return(num/1e15).toFixed(2)+'Qa';if(num>=1e12)return(num/1e12).toFixed(2)+'T';if(num>=1e9)return(num/1e9).toFixed(2)+'B';if(num>=1e6)return(num/1e6).toFixed(2)+'M';if(num>=1e3)return(num/1e3).toFixed(2)+'K';return num;}
+    function formatNumber(num) {
+      num = new Decimal(num);
+      if (num.gte(1e21)) return num.div(1e21).toFixed(2)+'Sx';
+      if (num.gte(1e18)) return num.div(1e18).toFixed(2)+'Qi';
+      if (num.gte(1e15)) return num.div(1e15).toFixed(2)+'Qa';
+      if (num.gte(1e12)) return num.div(1e12).toFixed(2)+'T';
+      if (num.gte(1e9)) return num.div(1e9).toFixed(2)+'B';
+      if (num.gte(1e6)) return num.div(1e6).toFixed(2)+'M';
+      if (num.gte(1e3)) return num.div(1e3).toFixed(2)+'K';
+      return num.toString();
+    }
 
-    function calculateTime(){
-      let powerType=document.getElementById('powerType').value;
-      let tickSpeed=tickSpeeds[powerType];
-      let currentStat=parseValue(document.getElementById('currentStat').value);
-      let requiredStat=parseValue(document.getElementById('requiredStat').value);
-      let tokens=parseValue(document.getElementById('tokens').value);
-      let multiplier=parseInt(document.getElementById('multiplier').value);
-      let tickGain=parseValue(document.getElementById('tickGain').value); // actual tick gain, NOT multiplied by current multiplier
+    function calculateTime() {
+      let powerType = document.getElementById('powerType').value;
+      let tickSpeed = new Decimal(tickSpeeds[powerType]);
+      let currentStat = parseValue(document.getElementById('currentStat').value);
+      let requiredStat = parseValue(document.getElementById('requiredStat').value);
+      let tokens = parseValue(document.getElementById('tokens').value);
+      let multiplier = new Decimal(document.getElementById('multiplier').value);
+      let tickGain = parseValue(document.getElementById('tickGain').value);
 
-      let dailyBonus=document.querySelectorAll('.dailyQuest:checked').length*20;
-      let weeklyCheckboxes=document.querySelectorAll('.weeklyQuest[data-tokens]');
-      let weeklyBonus=0;
-      weeklyCheckboxes.forEach(cb=>{if(cb.checked)weeklyBonus+=parseInt(cb.getAttribute('data-tokens'));});
+      let dailyBonus = document.querySelectorAll('.dailyQuest:checked').length*20;
+      let weeklyBonus = 0;
+      document.querySelectorAll('.weeklyQuest:checked').forEach(cb=>{
+        weeklyBonus += parseInt(cb.getAttribute('data-tokens'));
+      });
 
-      let elapsed=0;
-      let nextMinute=60;
-      let nextDay=86400;
-      let nextWeek=604800;
-      let ticksSimulated=0;
+      let elapsed = new Decimal(0);
+      let nextMinute = new Decimal(60);
+      let nextDay = new Decimal(86400);
+      let nextWeek = new Decimal(604800);
 
-      while(currentStat<requiredStat){
-        currentStat+=tickGain; // tickGain already includes area multiplier
-        elapsed+=tickSpeed;
-        ticksSimulated++;
-        while(elapsed>=nextMinute){tokens+=5;nextMinute+=60;}
-        while(elapsed>=nextDay){tokens+=dailyBonus;nextDay+=86400;}
-        while(elapsed>=nextWeek){tokens+=weeklyBonus;nextWeek+=604800;}
-        let nextMulti=multiplier*2;
-        while(multiplierCosts[nextMulti]&&tokens>=multiplierCosts[nextMulti]){
-          tokens-=multiplierCosts[nextMulti];
-          multiplier=nextMulti;
-          tickGain*=2; // multiply tickGain when buying next multiplier
-          nextMulti*=2;
+      while (currentStat.lt(requiredStat)) {
+       
+        let needed = requiredStat.minus(currentStat).div(tickGain);
+        if (needed.lte(0)) break;
+
+        
+        currentStat = currentStat.plus(tickGain.times(needed));
+        elapsed = elapsed.plus(tickSpeed.times(needed));
+
+        
+        while (elapsed.gte(nextMinute)) { tokens = tokens.plus(5); nextMinute = nextMinute.plus(60); }
+        while (elapsed.gte(nextDay)) { tokens = tokens.plus(dailyBonus); nextDay = nextDay.plus(86400); }
+        while (elapsed.gte(nextWeek)) { tokens = tokens.plus(weeklyBonus); nextWeek = nextWeek.plus(604800); }
+
+       
+        let nextMulti = multiplier.times(2);
+        while (multiplierCosts[nextMulti] && tokens.gte(multiplierCosts[nextMulti])) {
+          tokens = tokens.minus(multiplierCosts[nextMulti]);
+          multiplier = nextMulti;
+          tickGain = tickGain.times(2);
+          nextMulti = multiplier.times(2);
         }
-        if(ticksSimulated>5e7)break;
+
+        break; 
       }
 
-      let hours=elapsed/3600,days=hours/24,months=days/30,years=days/365;
-      document.getElementById('result').innerText=
+      let hours = elapsed.div(3600);
+      let days = hours.div(24);
+      let months = days.div(30);
+      let years = days.div(365);
+
+      document.getElementById('result').innerText =
         `Time required: ${hours.toFixed(2)} hours\n`+
         `${days.toFixed(2)} days | ${months.toFixed(2)} months | ${years.toFixed(2)} years\n`+
         `Final Stat: ${formatNumber(currentStat)}\n`+
@@ -144,5 +186,3 @@
   </script>
 </body>
 </html>
-
-
