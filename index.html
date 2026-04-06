@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SPTS Classic Calculator | Pro Edition</title>
+  <title>sky's calc</title>
   <style>
     body { background: #111; color: #eee; font-family: Arial, sans-serif; padding: 20px; position: relative; }
     h1 { color: #0ff; text-shadow: 0 0 8px #0ff; }
@@ -22,7 +22,7 @@
   </style>
 </head>
 <body>
-  <h1>SPTS Classic Calculator</h1>
+  <h1>sky calc</h1>
   
   <div class="form-row">
     <label>Power Type:
@@ -46,14 +46,14 @@
         <option value="1">1x</option><option value="2">2x</option><option value="4">4x</option>
         <option value="8">8x</option><option value="16">16x</option><option value="32">32x</option>
         <option value="64">64x</option><option value="128">128x</option><option value="256">256x</option>
-        <option value="512">512x</option><option value="1024">1024x</option><option value="2048">2048x</option>
+        <option value="512">512x</option><option value="1024">1024x</option><option value="2048" selected>2048x</option>
         <option value="4096">4096x</option><option value="8192">8192x</option><option value="16384">16384x</option>
         <option value="32768">32768x</option><option value="65536">65536x</option><option value="131072">131072x</option>
         <option value="262144">262144x</option><option value="524288">524288x</option>
       </select>
     </label>
-    <label>Tick Gain (Base):
-      <input type="text" id="tickGain" value="1">
+    <label>Current Actual Gain (With Multi):
+      <input type="text" id="actualGain" value="1.638B">
     </label>
   </div>
 
@@ -113,33 +113,33 @@
       let currentStat = parseValue(document.getElementById('currentStat').value);
       let requiredStat = parseValue(document.getElementById('requiredStat').value);
       let tokens = parseValue(document.getElementById('tokens').value);
-      let multiplier = new Decimal(document.getElementById('multiplier').value);
-      let baseGain = parseValue(document.getElementById('tickGain').value);
+      let startMultiplier = new Decimal(document.getElementById('multiplier').value);
+      let inputGain = parseValue(document.getElementById('actualGain').value);
 
-      // Quest bonus tracking
+      // Determine the BASE gain (Input / Current Multiplier)
+      let baseGain = inputGain.div(startMultiplier);
+      let multiplier = startMultiplier;
+
+      // Token income rate
       let dailyBonus = new Decimal(document.querySelectorAll('.dailyQuest:checked').length * 20);
       let weeklyBonus = 0;
       document.querySelectorAll('.weeklyQuest:checked').forEach(cb => {
         weeklyBonus += parseInt(cb.getAttribute('data-tokens'));
       });
-      let weeklyBonusDec = new Decimal(weeklyBonus);
-
-      // Token income rate: 5 per minute passive + Quests (normalized per second)
       let tokensPerSec = new Decimal(5).div(60)
                          .plus(dailyBonus.div(86400))
-                         .plus(weeklyBonusDec.div(604800));
+                         .plus(new Decimal(weeklyBonus).div(604800));
 
       let elapsed = new Decimal(0);
 
       while (currentStat.lt(requiredStat)) {
-        let currentTickGain = baseGain.times(multiplier);
-        let nextMulti = multiplier.times(2);
-        let cost = multiplierCosts[nextMulti];
+        let currentActualGain = baseGain.times(multiplier);
+        let nextMultiValue = multiplier.times(2);
+        let cost = multiplierCosts[nextMultiValue];
 
-        // No more multiplier upgrades or final stretch
         if (!cost) {
           let finalGap = requiredStat.minus(currentStat);
-          let finalTicks = finalGap.div(currentTickGain).ceil();
+          let finalTicks = finalGap.div(currentActualGain).ceil();
           let finalTime = finalTicks.times(tickSpeed);
           elapsed = elapsed.plus(finalTime);
           tokens = tokens.plus(tokensPerSec.times(finalTime));
@@ -151,18 +151,16 @@
         
         if (tokensNeeded.lte(0)) {
           tokens = tokens.minus(cost);
-          multiplier = nextMulti;
+          multiplier = nextMultiValue;
           continue; 
         } else {
-          // Time to wait until we can afford the upgrade
           let timeToWait = tokensNeeded.div(tokensPerSec);
           let ticksToWait = timeToWait.div(tickSpeed).ceil();
           let jumpTime = ticksToWait.times(tickSpeed);
-          let statsDuringWait = ticksToWait.times(currentTickGain);
+          let statsDuringWait = ticksToWait.times(currentActualGain);
 
-          // Did we finish training while waiting for the next multiplier?
           if (currentStat.plus(statsDuringWait).gte(requiredStat)) {
-            let actualTicks = requiredStat.minus(currentStat).div(currentTickGain).ceil();
+            let actualTicks = requiredStat.minus(currentStat).div(currentActualGain).ceil();
             let actualTime = actualTicks.times(tickSpeed);
             elapsed = elapsed.plus(actualTime);
             tokens = tokens.plus(tokensPerSec.times(actualTime));
@@ -170,11 +168,10 @@
             break;
           }
 
-          // Jump forward to the upgrade point
           currentStat = currentStat.plus(statsDuringWait);
           elapsed = elapsed.plus(jumpTime);
           tokens = tokens.plus(tokensPerSec.times(jumpTime)).minus(cost);
-          multiplier = nextMulti;
+          multiplier = nextMultiValue;
         }
       }
 
@@ -186,7 +183,7 @@
         `${days.toFixed(2)} days | ${(days.div(30.44)).toFixed(2)} months\n\n`+
         `Final Stat: ${formatNumber(currentStat)}\n`+
         `Final Multiplier: ${multiplier}x\n`+
-        `Final Tick Gain: ${formatNumber(baseGain.times(multiplier))} per tick\n`+
+        `Final Actual Gain: ${formatNumber(baseGain.times(multiplier))} per tick\n`+
         `Tokens remaining: ${formatNumber(tokens)}`;
     }
   </script>
