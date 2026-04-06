@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SPTS Classic Calculator | Optimized</title>
+  <title>SPTS Classic Calculator | Fixed</title>
   <style>
     body { background: #111; color: #eee; font-family: Arial, sans-serif; padding: 20px; position: relative; }
     h1 { color: #0ff; text-shadow: 0 0 8px #0ff; }
@@ -15,9 +15,6 @@
     button { margin-top: 25px; padding: 15px 30px; background: #0ff; color: #111; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; font-size: 1rem; }
     button:hover { background: #0cc; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3); }
     #result { margin-top: 20px; font-size: 18px; color: #ff69b4; white-space: pre-line; line-height: 1.6; font-family: monospace; border-left: 4px solid #ff69b4; padding-left: 15px; }
-    .credits { position: fixed; bottom: 10px; right: 20px; font-size: 14px; color: #0ff; }
-    .credits a { color: #0ff; text-decoration: none; }
-    .credits a:hover { text-decoration: underline; }
     .checkbox-label { flex-direction: row; align-items: center; gap: 10px; cursor: pointer; font-weight: normal; margin-top: 5px; }
     .checkbox-label input { width: 18px; height: 18px; margin: 0; }
   </style>
@@ -34,10 +31,10 @@
       </select>
     </label>
     <label>Current Stat Amount:
-      <input type="text" id="currentStat" value="0" placeholder="Use K/M/B/T etc.">
+      <input type="text" id="currentStat" value="0">
     </label>
     <label>Required Stat Amount:
-      <input type="text" id="requiredStat" value="1Qi" placeholder="Use K/M/B/T etc.">
+      <input type="text" id="requiredStat" value="1Qi">
     </label>
     <label>Current Tokens:
       <input type="text" id="tokens" value="0">
@@ -53,7 +50,7 @@
         <option value="262144">262144x</option><option value="524288">524288x</option>
       </select>
     </label>
-    <label>Tick Gain :
+    <label>Tick Gain (Base):
       <input type="text" id="tickGain" value="1">
     </label>
   </div>
@@ -68,7 +65,7 @@
   </div>
 
   <div class="quest-section">
-    <h3>Weekly Quests (+100, 500, 2500 tokens per stat)</h3>
+    <h3>Weekly Quests</h3>
     <label class="checkbox-label"><input type="checkbox" class="weeklyQuest" data-tokens="100"> Easy Quest (+100)</label>
     <label class="checkbox-label"><input type="checkbox" class="weeklyQuest" data-tokens="500"> Medium Quest (+500)</label>
     <label class="checkbox-label"><input type="checkbox" class="weeklyQuest" data-tokens="2500"> Hard Quest (+2500)</label>
@@ -76,8 +73,6 @@
 
   <button onclick="calculateTime()">Calculate</button>
   <div id="result">Results will appear here...</div>
-  
-  <div class="credits"><a href="https://skyabc.me" target="_blank">made by sky!!</a></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
   <script>
@@ -93,16 +88,12 @@
       str = str.trim().toUpperCase();
       let val = str.replace(/[A-Z]/g, '');
       let suffix = str.replace(/[0-9.]/g, '');
-      const mults = {
-        'K': 1e3, 'M': 1e6, 'B': 1e9, 'T': 1e12, 
-        'QA': 1e15, 'QI': 1e18, 'SX': 1e21, 'SP': 1e24, 'O': 1e27, 'N': 1e30
-      };
+      const mults = {'K': 1e3, 'M': 1e6, 'B': 1e9, 'T': 1e12, 'QA': 1e15, 'QI': 1e18, 'SX': 1e21};
       return new Decimal(val || 0).times(mults[suffix] || 1);
     }
 
     function formatNumber(num) {
       num = new Decimal(num);
-      if (num.gte(1e21)) return num.div(1e21).toFixed(2)+'Sx';
       if (num.gte(1e18)) return num.div(1e18).toFixed(2)+'Qi';
       if (num.gte(1e15)) return num.div(1e15).toFixed(2)+'Qa';
       if (num.gte(1e12)) return num.div(1e12).toFixed(2)+'T';
@@ -119,65 +110,64 @@
       let requiredStat = parseValue(document.getElementById('requiredStat').value);
       let tokens = parseValue(document.getElementById('tokens').value);
       let multiplier = new Decimal(document.getElementById('multiplier').value);
-      let tickGain = parseValue(document.getElementById('tickGain').value);
-
-      // Quest bonus logic from your previous code
-      let dailyBonus = document.querySelectorAll('.dailyQuest:checked').length * 20;
-      let weeklyBonus = 0;
-      document.querySelectorAll('.weeklyQuest:checked').forEach(cb => {
-        weeklyBonus += parseInt(cb.getAttribute('data-tokens'));
-      });
+      let baseGain = parseValue(document.getElementById('tickGain').value);
 
       let elapsed = new Decimal(0);
-      
-      // OPTIMIZED SIMULATION ENGINE
-      // This loop "jumps" between multiplier upgrades instead of counting every second.
+
+      // Loop until currentStat actually reaches requiredStat
       while (currentStat.lt(requiredStat)) {
-        let currentTotalGain = tickGain.times(multiplier);
+        let currentTickGain = baseGain.times(multiplier);
         let nextMulti = multiplier.times(2);
-        
-        // 1. Calculate how many tokens we still need for the next upgrade
-        let tokensNeeded = new Decimal(multiplierCosts[nextMulti] || Infinity).minus(tokens);
+        let cost = multiplierCosts[nextMulti];
 
-        // 2. If we can afford a better multiplier or earn it soon, we simulate that jump
-        if (multiplierCosts[nextMulti] && tokensNeeded.gt(-Infinity)) {
-          // Tokens are earned at 5 per 60s (1 token per 12s)
-          let timeToEarnTokens = tokensNeeded.gt(0) ? tokensNeeded.times(12) : new Decimal(0);
-          let ticksToNextUpgrade = timeToEarnTokens.div(tickSpeed).ceil();
-          let statsDuringWait = ticksToNextUpgrade.times(currentTotalGain);
-
-          // If we finish before we ever reach the next upgrade, break out
-          if (currentStat.plus(statsDuringWait).gte(requiredStat)) break;
-
-          // Otherwise, jump to the upgrade point
-          currentStat = currentStat.plus(statsDuringWait);
-          elapsed = elapsed.plus(ticksToNextUpgrade.times(tickSpeed));
-          tokens = tokens.plus(tokensNeeded.gt(0) ? tokensNeeded : 0); 
-          
-          // Buy the upgrade
-          tokens = tokens.minus(multiplierCosts[nextMulti]);
-          multiplier = nextMulti;
-        } else {
-          // No more possible upgrades, calculate final stretch
+        // If we can't upgrade anymore or don't have a cost for the next tier
+        if (!cost) {
           let finalGap = requiredStat.minus(currentStat);
-          let finalTicks = finalGap.div(currentTotalGain).ceil();
+          let finalTicks = finalGap.div(currentTickGain).ceil();
           elapsed = elapsed.plus(finalTicks.times(tickSpeed));
           currentStat = requiredStat;
           break;
+        }
+
+        let tokensNeeded = new Decimal(cost).minus(tokens);
+        
+        if (tokensNeeded.lte(0)) {
+          // Can afford now
+          tokens = tokens.minus(cost);
+          multiplier = nextMulti;
+          continue; // Re-evaluate gain with new multiplier
+        } else {
+          // Need to earn tokens (1 token per 12s)
+          let timeToEarn = tokensNeeded.times(12);
+          let ticksToWait = timeToEarn.div(tickSpeed).ceil();
+          let statsGained = ticksToWait.times(currentTickGain);
+
+          // Check if we reach the goal WHILE waiting for tokens
+          if (currentStat.plus(statsGained).gte(requiredStat)) {
+            let actualTicksNeeded = requiredStat.minus(currentStat).div(currentTickGain).ceil();
+            elapsed = elapsed.plus(actualTicksNeeded.times(tickSpeed));
+            currentStat = requiredStat;
+            break;
+          }
+
+          // Otherwise, jump to the upgrade point
+          currentStat = currentStat.plus(statsGained);
+          elapsed = elapsed.plus(ticksToWait.times(tickSpeed));
+          tokens = new Decimal(cost); // We waited exactly until we had enough
+          tokens = tokens.minus(cost);
+          multiplier = nextMulti;
         }
       }
 
       let hours = elapsed.div(3600);
       let days = hours.div(24);
-      let months = days.div(30.44);
-      let years = days.div(365.25);
 
       document.getElementById('result').innerText =
         `Time required: ${hours.toFixed(2)} hours\n`+
-        `${days.toFixed(2)} days | ${months.toFixed(2)} months | ${years.toFixed(2)} years\n\n`+
+        `${days.toFixed(2)} days | ${(days.div(30.44)).toFixed(2)} months\n\n`+
         `Final Stat: ${formatNumber(currentStat)}\n`+
         `Final Multiplier: ${multiplier}x\n`+
-        `Final Tick Gain: ${formatNumber(tickGain.times(multiplier))} per tick\n`+
+        `Final Tick Gain: ${formatNumber(baseGain.times(multiplier))} per tick\n`+
         `Tokens remaining: ${formatNumber(tokens)}`;
     }
   </script>
