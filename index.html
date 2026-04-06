@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SPTS Classic Calculator | Fixed</title>
+  <title>SPTS Classic Calculator | Pro Edition</title>
   <style>
     body { background: #111; color: #eee; font-family: Arial, sans-serif; padding: 20px; position: relative; }
     h1 { color: #0ff; text-shadow: 0 0 8px #0ff; }
@@ -17,6 +17,8 @@
     #result { margin-top: 20px; font-size: 18px; color: #ff69b4; white-space: pre-line; line-height: 1.6; font-family: monospace; border-left: 4px solid #ff69b4; padding-left: 15px; }
     .checkbox-label { flex-direction: row; align-items: center; gap: 10px; cursor: pointer; font-weight: normal; margin-top: 5px; }
     .checkbox-label input { width: 18px; height: 18px; margin: 0; }
+    .credits { position: fixed; bottom: 10px; right: 20px; font-size: 14px; color: #0ff; }
+    .credits a { color: #0ff; text-decoration: none; }
   </style>
 </head>
 <body>
@@ -73,6 +75,8 @@
 
   <button onclick="calculateTime()">Calculate</button>
   <div id="result">Results will appear here...</div>
+  
+  <div class="credits"><a href="https://skyabc.me" target="_blank">made by sky!!</a></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
   <script>
@@ -112,19 +116,33 @@
       let multiplier = new Decimal(document.getElementById('multiplier').value);
       let baseGain = parseValue(document.getElementById('tickGain').value);
 
+      // Quest bonus tracking
+      let dailyBonus = new Decimal(document.querySelectorAll('.dailyQuest:checked').length * 20);
+      let weeklyBonus = 0;
+      document.querySelectorAll('.weeklyQuest:checked').forEach(cb => {
+        weeklyBonus += parseInt(cb.getAttribute('data-tokens'));
+      });
+      let weeklyBonusDec = new Decimal(weeklyBonus);
+
+      // Token income rate: 5 per minute passive + Quests (normalized per second)
+      let tokensPerSec = new Decimal(5).div(60)
+                         .plus(dailyBonus.div(86400))
+                         .plus(weeklyBonusDec.div(604800));
+
       let elapsed = new Decimal(0);
 
-      // Loop until currentStat actually reaches requiredStat
       while (currentStat.lt(requiredStat)) {
         let currentTickGain = baseGain.times(multiplier);
         let nextMulti = multiplier.times(2);
         let cost = multiplierCosts[nextMulti];
 
-        // If we can't upgrade anymore or don't have a cost for the next tier
+        // No more multiplier upgrades or final stretch
         if (!cost) {
           let finalGap = requiredStat.minus(currentStat);
           let finalTicks = finalGap.div(currentTickGain).ceil();
-          elapsed = elapsed.plus(finalTicks.times(tickSpeed));
+          let finalTime = finalTicks.times(tickSpeed);
+          elapsed = elapsed.plus(finalTime);
+          tokens = tokens.plus(tokensPerSec.times(finalTime));
           currentStat = requiredStat;
           break;
         }
@@ -132,29 +150,30 @@
         let tokensNeeded = new Decimal(cost).minus(tokens);
         
         if (tokensNeeded.lte(0)) {
-          // Can afford now
           tokens = tokens.minus(cost);
           multiplier = nextMulti;
-          continue; // Re-evaluate gain with new multiplier
+          continue; 
         } else {
-          // Need to earn tokens (1 token per 12s)
-          let timeToEarn = tokensNeeded.times(12);
-          let ticksToWait = timeToEarn.div(tickSpeed).ceil();
-          let statsGained = ticksToWait.times(currentTickGain);
+          // Time to wait until we can afford the upgrade
+          let timeToWait = tokensNeeded.div(tokensPerSec);
+          let ticksToWait = timeToWait.div(tickSpeed).ceil();
+          let jumpTime = ticksToWait.times(tickSpeed);
+          let statsDuringWait = ticksToWait.times(currentTickGain);
 
-          // Check if we reach the goal WHILE waiting for tokens
-          if (currentStat.plus(statsGained).gte(requiredStat)) {
-            let actualTicksNeeded = requiredStat.minus(currentStat).div(currentTickGain).ceil();
-            elapsed = elapsed.plus(actualTicksNeeded.times(tickSpeed));
+          // Did we finish training while waiting for the next multiplier?
+          if (currentStat.plus(statsDuringWait).gte(requiredStat)) {
+            let actualTicks = requiredStat.minus(currentStat).div(currentTickGain).ceil();
+            let actualTime = actualTicks.times(tickSpeed);
+            elapsed = elapsed.plus(actualTime);
+            tokens = tokens.plus(tokensPerSec.times(actualTime));
             currentStat = requiredStat;
             break;
           }
 
-          // Otherwise, jump to the upgrade point
-          currentStat = currentStat.plus(statsGained);
-          elapsed = elapsed.plus(ticksToWait.times(tickSpeed));
-          tokens = new Decimal(cost); // We waited exactly until we had enough
-          tokens = tokens.minus(cost);
+          // Jump forward to the upgrade point
+          currentStat = currentStat.plus(statsDuringWait);
+          elapsed = elapsed.plus(jumpTime);
+          tokens = tokens.plus(tokensPerSec.times(jumpTime)).minus(cost);
           multiplier = nextMulti;
         }
       }
