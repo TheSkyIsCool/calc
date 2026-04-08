@@ -5,7 +5,7 @@
   <title>sky's calc</title>
   <style>
     body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 900px; margin: auto; }
-    h1 { color: #0ff; text-shadow: 0 0 8px #0ff; text-align: center; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px; }
+    h1 { color: #0ff; text-shadow: 0 0 8px #0ff; text-align: center; letter-spacing: 2px; margin-bottom: 30px; font-weight: 300; }
     
     .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
     .input-group { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-bottom: 20px; }
@@ -19,7 +19,6 @@
     .checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: normal; font-size: 0.8rem; color: #ccc; }
     .checkbox-label input { width: 18px; height: 18px; }
     
-    /* Toggle & Tooltip */
     .toggle-area { width: 100%; text-align: center; margin: 15px 0; }
     .toggle-label { color: #ff69b4; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: bold; position: relative; }
     
@@ -30,7 +29,6 @@
     }
     .help-icon:hover { background: #0ff; color: #111; }
 
-    /* Tooltip Popup */
     .tooltip {
       visibility: hidden; width: 220px; background-color: #333; color: #fff;
       text-align: center; border-radius: 6px; padding: 10px; position: absolute;
@@ -55,7 +53,7 @@
   </style>
 </head>
 <body>
-  <h1>calc ig</h1>
+  <h1>sky's calc</h1>
   
   <div class="container">
     <div class="input-group">
@@ -235,7 +233,7 @@
       document.getElementById('result').innerHTML = 
         `RESULTS:\n----------------------------------\n` +
         `Time Required: <span class="highlight">${formatTime(totalSec)}</span>\n` +
-        `Strategy: <span class="highlight">${autoUpgrade ? "Auto-Upgrading" : "Static Multiplier"}</span>\n\n` +
+        `Multiplier: <span class="highlight">${autoUpgrade ? "Auto-Upgrading" : "Static Multiplier"}</span>\n\n` +
         `Final Multiplier: <span class="highlight">${simMulti}x</span>\n` +
         `Final Gain: <span class="highlight">${format(baseGain.times(simMulti))} /tick</span>\n` +
         `Tokens Left: <span class="highlight">${format(tokens)}</span>`;
