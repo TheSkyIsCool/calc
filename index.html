@@ -4,187 +4,241 @@
   <meta charset="UTF-8">
   <title>sky's calc</title>
   <style>
-    body { background: #111; color: #eee; font-family: Arial, sans-serif; padding: 20px; position: relative; }
-    h1 { color: #0ff; text-shadow: 0 0 8px #0ff; }
-    label { display: flex; flex-direction: column; margin-top: 10px; font-weight: bold; }
-    input, select { margin-top: 5px; padding: 10px; border-radius: 8px; border: none; width: 250px; background: #222; color: #fff; transition: all 0.2s ease; }
-    input:focus, select:focus { outline: 2px solid #0ff; background: #2a2a2a; }
-    .quest-section { margin-top: 15px; padding: 15px; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; background: #161616; }
-    .quest-section h3 { margin: 0 0 10px 0; color: #ff69b4; font-size: 1.1rem; }
-    .form-row { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 10px; }
-    button { margin-top: 25px; padding: 15px 30px; background: #0ff; color: #111; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; font-size: 1rem; }
-    button:hover { background: #0cc; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3); }
-    #result { margin-top: 20px; font-size: 18px; color: #ff69b4; white-space: pre-line; line-height: 1.6; font-family: monospace; border-left: 4px solid #ff69b4; padding-left: 15px; }
-    .checkbox-label { flex-direction: row; align-items: center; gap: 10px; cursor: pointer; font-weight: normal; margin-top: 5px; }
-    .checkbox-label input { width: 18px; height: 18px; margin: 0; }
-    .credits { position: fixed; bottom: 10px; right: 20px; font-size: 14px; color: #0ff; }
-    .credits a { color: #0ff; text-decoration: none; }
+    body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 900px; margin: auto; }
+    h1 { color: #0ff; text-shadow: 0 0 8px #0ff; text-align: center; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px; }
+    
+    .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+    .input-group { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-bottom: 20px; }
+    label { display: flex; flex-direction: column; font-weight: bold; color: #0ff; font-size: 0.85rem; width: 200px; }
+    input, select { margin-top: 5px; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; font-size: 1rem; }
+    input:focus { outline: 2px solid #ff69b4; background: #2a2a2a; }
+    
+    .quest-section { margin-top: 10px; padding: 20px; border: 1px solid #444; border-radius: 12px; background: #161616; flex: 1; min-width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+    .quest-section h3 { margin: 0 0 15px 0; color: #ff69b4; border-bottom: 1px solid #333; padding-bottom: 5px; font-size: 1rem; }
+    .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: normal; font-size: 0.8rem; color: #ccc; }
+    .checkbox-label input { width: 18px; height: 18px; }
+    
+    /* Toggle & Tooltip */
+    .toggle-area { width: 100%; text-align: center; margin: 15px 0; }
+    .toggle-label { color: #ff69b4; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: bold; position: relative; }
+    
+    .help-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; background: #444; color: #fff;
+      border-radius: 50%; font-size: 12px; cursor: help; font-weight: bold;
+    }
+    .help-icon:hover { background: #0ff; color: #111; }
+
+    /* Tooltip Popup */
+    .tooltip {
+      visibility: hidden; width: 220px; background-color: #333; color: #fff;
+      text-align: center; border-radius: 6px; padding: 10px; position: absolute;
+      z-index: 10; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0;
+      transition: opacity 0.3s; font-size: 0.8rem; font-weight: normal;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 1px solid #0ff;
+    }
+    .tooltip::after {
+      content: ""; position: absolute; top: 100%; left: 50%;
+      margin-left: -5px; border-width: 5px; border-style: solid;
+      border-color: #333 transparent transparent transparent;
+    }
+    .help-icon:hover + .tooltip { visibility: visible; opacity: 1; }
+    
+    button { display: block; width: 100%; max-width: 400px; margin: 20px auto; padding: 18px; background: #0ff; color: #111; font-weight: 900; border: none; border-radius: 10px; cursor: pointer; transition: 0.3s; font-size: 1.2rem; text-transform: uppercase; }
+    button:hover { background: #ff69b4; color: #fff; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255, 105, 180, 0.4); }
+    
+    #result { margin-top: 20px; font-size: 1.1rem; color: #eee; white-space: pre-line; line-height: 1.6; font-family: 'Consolas', monospace; background: #000; padding: 25px; border-radius: 10px; border: 1px solid #ff69b4; }
+    .highlight { color: #0ff; font-weight: bold; }
+    .credits { text-align: center; margin-top: 40px; font-size: 13px; color: #444; }
+    .credits a { color: #ff69b4; text-decoration: none; }
   </style>
 </head>
 <body>
-  <h1>sky calc</h1>
+  <h1>calc</h1>
   
-  <div class="form-row">
-    <label>Power Type:
-      <select id="powerType">
-        <option value="fist">Fist Strength (1s/tick)</option>
-        <option value="body">Body Toughness (1.25s/tick)</option>
-        <option value="psychic">Psychic Power (1.5s/tick)</option>
-      </select>
-    </label>
-    <label>Current Stat Amount:
-      <input type="text" id="currentStat" value="0">
-    </label>
-    <label>Required Stat Amount:
-      <input type="text" id="requiredStat" value="1Qi">
-    </label>
-    <label>Current Tokens:
-      <input type="text" id="tokens" value="0">
-    </label>
-    <label>Current Multiplier:
-      <select id="multiplier">
-        <option value="1">1x</option><option value="2">2x</option><option value="4">4x</option>
-        <option value="8">8x</option><option value="16">16x</option><option value="32">32x</option>
-        <option value="64">64x</option><option value="128">128x</option><option value="256">256x</option>
-        <option value="512">512x</option><option value="1024">1024x</option><option value="2048" selected>2048x</option>
-        <option value="4096">4096x</option><option value="8192">8192x</option><option value="16384">16384x</option>
-        <option value="32768">32768x</option><option value="65536">65536x</option><option value="131072">131072x</option>
-        <option value="262144">262144x</option><option value="524288">524288x</option>
-      </select>
-    </label>
-    <label>Current Actual Gain (With Multi):
-      <input type="text" id="actualGain" value="1.638B">
-    </label>
+  <div class="container">
+    <div class="input-group">
+      <label>Stat:
+        <select id="powerType">
+          <option value="fist">Fist Strength (1.0s)</option>
+          <option value="body">Body Toughness (1.25s)</option>
+          <option value="psychic">Psychic Power (1.5s)</option>
+        </select>
+      </label>
+      <label>Current Multiplier:
+        <select id="multiplier"></select>
+      </label>
+      <label>Gain Per Tick:
+        <input type="text" id="actualGain" placeholder="e.g. 1.63B" value="0">
+      </label>
+      <label>Current Stat:
+        <input type="text" id="currentStat" value="0">
+      </label>
+      <label>Required Stat:
+        <input type="text" id="requiredStat" value="0">
+      </label>
+      <label>Current Tokens:
+        <input type="text" id="tokens" value="0">
+      </label>
+    </div>
+
+    <div class="toggle-area">
+        <label class="toggle-label">
+            <input type="checkbox" id="autoUpgrade" checked> 
+            Auto-Upgrade Multipliers?
+            <span class="help-icon">?</span>
+            <span class="tooltip">Simulates buying the next multiplier as soon as you have enough tokens.</span>
+        </label>
+    </div>
+
+    <div class="quest-section">
+      <h3>Daily Quests (+20 Tokens Each)</h3>
+      <div class="checkbox-grid" id="dailyContainer"></div>
+    </div>
+
+    <div class="quest-section">
+      <h3>Weekly Quests</h3>
+      <div class="checkbox-grid" id="weeklyContainer"></div>
+    </div>
   </div>
 
-  <div class="quest-section">
-    <h3>Daily Quests (+20 tokens each)</h3>
-    <label class="checkbox-label"><input type="checkbox" class="dailyQuest"> Fist Strength</label>
-    <label class="checkbox-label"><input type="checkbox" class="dailyQuest"> Body Toughness</label>
-    <label class="checkbox-label"><input type="checkbox" class="dailyQuest"> Psychic Power</label>
-    <label class="checkbox-label"><input type="checkbox" class="dailyQuest"> Movement Speed</label>
-    <label class="checkbox-label"><input type="checkbox" class="dailyQuest"> Jump Force</label>
-  </div>
-
-  <div class="quest-section">
-    <h3>Weekly Quests</h3>
-    <label class="checkbox-label"><input type="checkbox" class="weeklyQuest" data-tokens="100"> Easy Quest (+100)</label>
-    <label class="checkbox-label"><input type="checkbox" class="weeklyQuest" data-tokens="500"> Medium Quest (+500)</label>
-    <label class="checkbox-label"><input type="checkbox" class="weeklyQuest" data-tokens="2500"> Hard Quest (+2500)</label>
-  </div>
-
-  <button onclick="calculateTime()">Calculate</button>
-  <div id="result">Results will appear here...</div>
+  <button onclick="calculateStrategy()">Calculate Time</button>
+  <div id="result">Waiting for input...</div>
   
-  <div class="credits"><a href="https://skyabc.me" target="_blank">made by sky!!</a></div>
+  <div class="credits">made by <a href="https://skyabc.me" target="_blank">sky!!</a></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
   <script>
-    const multiplierCosts = {
-      2:100,4:200,8:500,16:1000,32:2000,64:5000,128:10000,256:15000,
-      512:20000,1024:50000,2048:100000,4096:200000,8192:500000,16384:1000000,
-      32768:2000000,65536:5000000,131072:10000000,262144:20000000,524288:50000000
+    const multCosts = {
+      2:100, 4:200, 8:500, 16:1000, 32:2000, 64:5000, 128:10000, 256:15000,
+      512:20000, 1024:50000, 2048:100000, 4096:200000, 8192:500000, 16384:1000000,
+      32768:2000000, 65536:5000000, 131072:10000000, 262144:20000000, 524288:50000000
     };
-    const tickSpeeds = {fist:1, body:1.25, psychic:1.5};
+    const tickSpeeds = { fist: 1.0, body: 1.25, psychic: 1.5 };
+    const suffixes = { 'K': 1e3, 'M': 1e6, 'B': 1e9, 'T': 1e12, 'QA': 1e15, 'QI': 1e18, 'SX': 1e21, 'SP': 1e24 };
 
-    function parseValue(str) {
-      if (!str) return new Decimal(0);
-      str = str.trim().toUpperCase();
-      let val = str.replace(/[A-Z]/g, '');
-      let suffix = str.replace(/[0-9.]/g, '');
-      const mults = {'K': 1e3, 'M': 1e6, 'B': 1e9, 'T': 1e12, 'QA': 1e15, 'QI': 1e18, 'SX': 1e21};
-      return new Decimal(val || 0).times(mults[suffix] || 1);
+    const multiSelect = document.getElementById('multiplier');
+    [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288].forEach(m => {
+      multiSelect.innerHTML += `<option value="${m}">${m}x</option>`;
+    });
+    multiSelect.value = "1";
+
+    const dailyNames = ['Fist', 'Body', 'Psychic', 'Speed', 'Jump'];
+    dailyNames.forEach(t => {
+      document.getElementById('dailyContainer').innerHTML += `<label class="checkbox-label"><input type="checkbox" class="dailyQuest"> ${t} Quest</label>`;
+    });
+
+    [100, 100, 100, 500, 500, 500, 2500, 2500, 2500].forEach((v, i) => {
+      let tier = i < 3 ? "Easy" : i < 6 ? "Medium" : "Hard";
+      document.getElementById('weeklyContainer').innerHTML += `<label class="checkbox-label"><input type="checkbox" class="weeklyQuest" data-tokens="${v}"> ${tier} (+${v})</label>`;
+    });
+
+    function parseVal(str) {
+      if (!str || str === "0") return new Decimal(0);
+      str = str.toString().toUpperCase().trim();
+      let suffixMatch = str.match(/[A-Z]+/);
+      let numPart = str.replace(/[A-Z]+/g, '');
+      let multiplier = suffixMatch && suffixes[suffixMatch[0]] ? suffixes[suffixMatch[0]] : 1;
+      return new Decimal(numPart || 0).times(multiplier);
     }
 
-    function formatNumber(num) {
+    function format(num) {
       num = new Decimal(num);
-      if (num.gte(1e18)) return num.div(1e18).toFixed(2)+'Qi';
-      if (num.gte(1e15)) return num.div(1e15).toFixed(2)+'Qa';
-      if (num.gte(1e12)) return num.div(1e12).toFixed(2)+'T';
-      if (num.gte(1e9)) return num.div(1e9).toFixed(2)+'B';
-      if (num.gte(1e6)) return num.div(1e6).toFixed(2)+'M';
-      if (num.gte(1e3)) return num.div(1e3).toFixed(2)+'K';
+      let keys = Object.keys(suffixes).reverse();
+      for (let s of keys) {
+        if (num.gte(suffixes[s])) return num.div(suffixes[s]).toFixed(2) + s;
+      }
       return num.toFixed(0);
     }
 
-    function calculateTime() {
-      let powerType = document.getElementById('powerType').value;
-      let tickSpeed = new Decimal(tickSpeeds[powerType]);
-      let currentStat = parseValue(document.getElementById('currentStat').value);
-      let requiredStat = parseValue(document.getElementById('requiredStat').value);
-      let tokens = parseValue(document.getElementById('tokens').value);
-      let startMultiplier = new Decimal(document.getElementById('multiplier').value);
-      let inputGain = parseValue(document.getElementById('actualGain').value);
+    function formatTime(totalSeconds) {
+      let s = Math.floor(totalSeconds.toNumber());
+      let d = Math.floor(s / 86400);
+      s %= 86400;
+      let h = Math.floor(s / 3600);
+      s %= 3600;
+      let m = Math.floor(s / 60);
+      s %= 60;
+      let res = [];
+      if (d > 0) res.push(`${d}d`);
+      if (h > 0) res.push(`${h}h`);
+      if (m > 0) res.push(`${m}m`);
+      if (s > 0 || res.length === 0) res.push(`${s}s`);
+      return res.join(' ');
+    }
 
-      // Determine the BASE gain (Input / Current Multiplier)
-      let baseGain = inputGain.div(startMultiplier);
-      let multiplier = startMultiplier;
+    function calculateStrategy() {
+      let tickSpeed = new Decimal(tickSpeeds[document.getElementById('powerType').value]);
+      let currentStat = parseVal(document.getElementById('currentStat').value);
+      let targetStat = parseVal(document.getElementById('requiredStat').value);
+      let tokens = parseVal(document.getElementById('tokens').value);
+      let actualGain = parseVal(document.getElementById('actualGain').value);
+      let currentMulti = parseInt(document.getElementById('multiplier').value);
+      let autoUpgrade = document.getElementById('autoUpgrade').checked;
 
-      // Token income rate
-      let dailyBonus = new Decimal(document.querySelectorAll('.dailyQuest:checked').length * 20);
+      if (actualGain.lte(0) || targetStat.lte(0)) {
+        document.getElementById('result').innerText = "Input stats to calculate time.";
+        return;
+      }
+
+      let baseGain = actualGain.div(currentMulti);
+      let dailyBonus = document.querySelectorAll('.dailyQuest:checked').length * 20;
       let weeklyBonus = 0;
-      document.querySelectorAll('.weeklyQuest:checked').forEach(cb => {
-        weeklyBonus += parseInt(cb.getAttribute('data-tokens'));
-      });
-      let tokensPerSec = new Decimal(5).div(60)
-                         .plus(dailyBonus.div(86400))
-                         .plus(new Decimal(weeklyBonus).div(604800));
+      document.querySelectorAll('.weeklyQuest:checked').forEach(c => weeklyBonus += parseInt(c.dataset.tokens));
+      
+      let tokensPerDay = new Decimal(5 * 60 * 24).plus(dailyBonus).plus(weeklyBonus / 7);
+      let tokensPerSec = tokensPerDay.div(86400);
 
-      let elapsed = new Decimal(0);
+      let totalSec = new Decimal(0);
+      let simMulti = currentMulti;
 
-      while (currentStat.lt(requiredStat)) {
-        let currentActualGain = baseGain.times(multiplier);
-        let nextMultiValue = multiplier.times(2);
-        let cost = multiplierCosts[nextMultiValue];
+      while (currentStat.lt(targetStat)) {
+        let gainPerTick = baseGain.times(simMulti);
+        let nextMulti = simMulti * 2;
+        let cost = multCosts[nextMulti];
 
-        if (!cost) {
-          let finalGap = requiredStat.minus(currentStat);
-          let finalTicks = finalGap.div(currentActualGain).ceil();
-          let finalTime = finalTicks.times(tickSpeed);
-          elapsed = elapsed.plus(finalTime);
-          tokens = tokens.plus(tokensPerSec.times(finalTime));
-          currentStat = requiredStat;
+        if (!autoUpgrade || !cost || simMulti >= 524288) {
+          let rem = targetStat.minus(currentStat);
+          let sec = rem.div(gainPerTick).times(tickSpeed);
+          totalSec = totalSec.plus(sec);
+          tokens = tokens.plus(tokensPerSec.times(sec));
+          currentStat = targetStat;
           break;
         }
 
-        let tokensNeeded = new Decimal(cost).minus(tokens);
-        
-        if (tokensNeeded.lte(0)) {
+        if (tokens.gte(cost)) {
           tokens = tokens.minus(cost);
-          multiplier = nextMultiValue;
-          continue; 
+          simMulti = nextMulti;
+          continue;
+        }
+
+        let tokensNeeded = new Decimal(cost).minus(tokens);
+        let timeToWait = tokensNeeded.div(tokensPerSec);
+        let ticksPossible = timeToWait.div(tickSpeed).floor();
+        let statsDuringWait = ticksPossible.times(gainPerTick);
+
+        if (currentStat.plus(statsDuringWait).gte(targetStat)) {
+          let rem = targetStat.minus(currentStat);
+          let sec = rem.div(gainPerTick).times(tickSpeed);
+          totalSec = totalSec.plus(sec);
+          tokens = tokens.plus(tokensPerSec.times(sec));
+          currentStat = targetStat;
         } else {
-          let timeToWait = tokensNeeded.div(tokensPerSec);
-          let ticksToWait = timeToWait.div(tickSpeed).ceil();
-          let jumpTime = ticksToWait.times(tickSpeed);
-          let statsDuringWait = ticksToWait.times(currentActualGain);
-
-          if (currentStat.plus(statsDuringWait).gte(requiredStat)) {
-            let actualTicks = requiredStat.minus(currentStat).div(currentActualGain).ceil();
-            let actualTime = actualTicks.times(tickSpeed);
-            elapsed = elapsed.plus(actualTime);
-            tokens = tokens.plus(tokensPerSec.times(actualTime));
-            currentStat = requiredStat;
-            break;
-          }
-
+          totalSec = totalSec.plus(timeToWait);
           currentStat = currentStat.plus(statsDuringWait);
-          elapsed = elapsed.plus(jumpTime);
-          tokens = tokens.plus(tokensPerSec.times(jumpTime)).minus(cost);
-          multiplier = nextMultiValue;
+          tokens = new Decimal(0); 
+          simMulti = nextMulti;
         }
       }
 
-      let hours = elapsed.div(3600);
-      let days = hours.div(24);
-
-      document.getElementById('result').innerText =
-        `Time required: ${hours.toFixed(2)} hours\n`+
-        `${days.toFixed(2)} days | ${(days.div(30.44)).toFixed(2)} months\n\n`+
-        `Final Stat: ${formatNumber(currentStat)}\n`+
-        `Final Multiplier: ${multiplier}x\n`+
-        `Final Actual Gain: ${formatNumber(baseGain.times(multiplier))} per tick\n`+
-        `Tokens remaining: ${formatNumber(tokens)}`;
+      document.getElementById('result').innerHTML = 
+        `RESULTS:\n----------------------------------\n` +
+        `Time Required: <span class="highlight">${formatTime(totalSec)}</span>\n` +
+        `Strategy: <span class="highlight">${autoUpgrade ? "Auto-Upgrading" : "Static Multiplier"}</span>\n\n` +
+        `Final Multiplier: <span class="highlight">${simMulti}x</span>\n` +
+        `Final Gain: <span class="highlight">${format(baseGain.times(simMulti))} /tick</span>\n` +
+        `Tokens Left: <span class="highlight">${format(tokens)}</span>`;
     }
   </script>
 </body>
