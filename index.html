@@ -91,7 +91,7 @@
     </div>
 
     <div class="quest-section">
-      <h3>Daily Quests (+20 Tokens Each)</h3>
+      <h3>Daily Quests (+20 Each)</h3>
       <div class="checkbox-grid" id="dailyContainer"></div>
     </div>
 
@@ -124,12 +124,11 @@
 
     const dailyNames = ['Fist', 'Body', 'Psychic', 'Speed', 'Jump'];
     dailyNames.forEach(t => {
-      document.getElementById('dailyContainer').innerHTML += `<label class="checkbox-label"><input type="checkbox" class="dailyQuest"> ${t} Quest</label>`;
+      document.getElementById('dailyContainer').innerHTML += `<label class="checkbox-label"><input type="checkbox" class="dailyQuest"> ${t}</label>`;
     });
 
     [100, 100, 100, 500, 500, 500, 2500, 2500, 2500].forEach((v, i) => {
-      let tier = i < 3 ? "Easy" : i < 6 ? "Medium" : "Hard";
-      document.getElementById('weeklyContainer').innerHTML += `<label class="checkbox-label"><input type="checkbox" class="weeklyQuest" data-tokens="${v}"> ${tier} (+${v})</label>`;
+      document.getElementById('weeklyContainer').innerHTML += `<label class="checkbox-label"><input type="checkbox" class="weeklyQuest" data-tokens="${v}"> +${v}</label>`;
     });
 
     function parseVal(str) {
@@ -176,7 +175,7 @@
       let autoUpgrade = document.getElementById('autoUpgrade').checked;
 
       if (actualGain.lte(0) || targetStat.lte(0)) {
-        document.getElementById('result').innerText = "Input stats to calculate time.";
+        document.getElementById('result').innerText = "Enter stats to calculate.";
         return;
       }
 
